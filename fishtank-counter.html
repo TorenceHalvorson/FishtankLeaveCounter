@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fishtank: Threats to Leave Counter</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --water-deep: #020d1a;
+    --water-mid: #041e35;
+    --water-surface: #063354;
+    --teal-glow: #00c8d4;
+    --teal-dim: #007a82;
+    --amber: #f5a623;
+    --red-hot: #ff3b3b;
+    --chalk: #e8e0d0;
+    --bubble: rgba(0, 200, 212, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--water-deep);
+    font-family: 'DM Mono', monospace;
+    color: var(--chalk);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated water background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(0,100,120,0.3) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(0,60,100,0.25) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(0,80,130,0.2) 0%, transparent 50%);
+    animation: waterShift 8s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes waterShift {
+    0% { transform: scale(1) translateY(0); opacity: 0.7; }
+    100% { transform: scale(1.05) translateY(-10px); opacity: 1; }
+  }
+
+  /* Bubbles */
+  .bubbles { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+  .bubble {
+    position: absolute;
+    bottom: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.4), rgba(0,200,212,0.1));
+    border: 1px solid rgba(0,200,212,0.3);
+    animation: rise linear infinite;
+  }
+  @keyframes rise {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 0.6; }
+    100% { transform: translateY(-110vh) translateX(30px); opacity: 0; }
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+
+  .show-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--teal-glow);
+    margin-bottom: 10px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 10vw, 90px);
+    letter-spacing: 4px;
+    line-height: 0.9;
+    color: var(--chalk);
+    text-shadow: 0 0 40px rgba(0,200,212,0.4), 0 0 80px rgba(0,200,212,0.2);
+    margin-bottom: 8px;
+  }
+
+  h1 span {
+    color: var(--teal-glow);
+    display: block;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(232,224,208,0.4);
+    margin-top: 12px;
+  }
+
+  /* TOTAL COUNTER */
+  .total-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 50px;
+  }
+
+  .total-card {
+    background: linear-gradient(135deg, rgba(255,59,59,0.12), rgba(255,59,59,0.04));
+    border: 1px solid rgba(255,59,59,0.4);
+    border-radius: 4px;
+    padding: 30px 60px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 0 40px rgba(255,59,59,0.15), inset 0 0 30px rgba(255,59,59,0.05);
+  }
+
+  .total-card::before {
+    content: '⚠ THREAT LEVEL CRITICAL ⚠';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--red-hot);
+    color: white;
+    font-size: 9px;
+    letter-spacing: 3px;
+    padding: 3px 12px;
+    white-space: nowrap;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .total-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 120px;
+    line-height: 1;
+    color: var(--red-hot);
+    text-shadow: 0 0 30px rgba(255,59,59,0.6), 0 0 60px rgba(255,59,59,0.3);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { text-shadow: 0 0 30px rgba(255,59,59,0.6), 0 0 60px rgba(255,59,59,0.3); }
+    50% { text-shadow: 0 0 50px rgba(255,59,59,0.9), 0 0 90px rgba(255,59,59,0.5); }
+  }
+
+  .total-label {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,59,59,0.7);
+    margin-top: -5px;
+  }
+
+  /* CONTESTANTS GRID */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 5px;
+    color: var(--teal-glow);
+    border-bottom: 1px solid rgba(0,200,212,0.2);
+    padding-bottom: 10px;
+    margin-bottom: 24px;
+    text-shadow: 0 0 20px rgba(0,200,212,0.4);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 14px;
+    margin-bottom: 50px;
+  }
+
+  .contestant-card {
+    background: rgba(4, 30, 53, 0.8);
+    border: 1px solid rgba(0,200,212,0.15);
+    border-radius: 3px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    transition: all 0.25s ease;
+    cursor: default;
+  }
+
+  .contestant-card:hover {
+    border-color: rgba(0,200,212,0.5);
+    background: rgba(6, 51, 84, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,200,212,0.1);
+  }
+
+  .contestant-card.has-threats {
+    border-color: rgba(255,59,59,0.35);
+    background: rgba(30, 8, 8, 0.7);
+  }
+
+  .contestant-card.has-threats:hover {
+    border-color: rgba(255,59,59,0.6);
+    box-shadow: 0 8px 25px rgba(255,59,59,0.15);
+  }
+
+  .contestant-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .contestant-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--chalk);
+    line-height: 1;
+  }
+
+  .contestant-card.has-threats .contestant-name {
+    color: #ffa0a0;
+  }
+
+  .streak-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(232,224,208,0.3);
+  }
+
+  .contestant-card.has-threats .streak-label {
+    color: rgba(255,100,100,0.6);
+  }
+
+  /* Count controls */
+  .count-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .count-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(0,200,212,0.3);
+    background: rgba(0,200,212,0.06);
+    color: var(--teal-glow);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .count-btn:hover {
+    background: rgba(0,200,212,0.2);
+    border-color: var(--teal-glow);
+  }
+
+  .count-btn.minus {
+    border-color: rgba(255,59,59,0.3);
+    color: var(--red-hot);
+    background: rgba(255,59,59,0.06);
+  }
+
+  .count-btn.minus:hover {
+    background: rgba(255,59,59,0.2);
+    border-color: var(--red-hot);
+  }
+
+  .count-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    min-width: 36px;
+    text-align: center;
+    color: var(--chalk);
+    line-height: 1;
+  }
+
+  .contestant-card.has-threats .count-display {
+    color: var(--red-hot);
+    text-shadow: 0 0 15px rgba(255,59,59,0.5);
+  }
+
+  /* THREAT LOG */
+  .log-section {
+    margin-bottom: 40px;
+  }
+
+  .log-feed {
+    background: rgba(2,13,26,0.9);
+    border: 1px solid rgba(0,200,212,0.1);
+    border-radius: 3px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  .log-feed::-webkit-scrollbar { width: 4px; }
+  .log-feed::-webkit-scrollbar-track { background: transparent; }
+  .log-feed::-webkit-scrollbar-thumb { background: var(--teal-dim); border-radius: 2px; }
+
+  .log-entry {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(0,200,212,0.06);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: logSlide 0.3s ease;
+  }
+
+  @keyframes logSlide {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .log-entry:last-child { border-bottom: none; }
+
+  .log-time {
+    font-size: 10px;
+    color: var(--teal-dim);
+    white-space: nowrap;
+    opacity: 0.7;
+  }
+
+  .log-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1px;
+    color: var(--red-hot);
+    min-width: 70px;
+  }
+
+  .log-msg {
+    font-size: 11px;
+    color: rgba(232,224,208,0.5);
+    font-style: italic;
+  }
+
+  .log-empty {
+    padding: 30px;
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: rgba(232,224,208,0.2);
+    text-transform: uppercase;
+  }
+
+  /* Dramatic flash on increment */
+  .flash-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,59,59,0.08);
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  .flash-overlay.active {
+    opacity: 1;
+    animation: flashOut 0.4s forwards;
+  }
+
+  @keyframes flashOut {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* Responsive */
+  @media (max-width: 500px) {
+    .total-number { font-size: 80px; }
+    .total-card { padding: 24px 40px; }
+    h1 { font-size: 52px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bubbles" id="bubbles"></div>
+<div class="flash-overlay" id="flash"></div>
+
+<div class="container">
+  <header>
+    <div class="show-label">🐟 Live Reality Tracker</div>
+    <h1>FISHTANK<span>QUITTER COUNT</span></h1>
+    <p class="subtitle">Tracking every threat to walk out the door</p>
+  </header>
+
+  <div class="total-section">
+    <div class="total-card">
+      <div class="total-number" id="totalCount">0</div>
+      <div class="total-label">Total Threats to Leave</div>
+    </div>
+  </div>
+
+  <div class="section-title">— Contestants —</div>
+
+  <div class="grid" id="contestantGrid"></div>
+
+  <div class="log-section">
+    <div class="section-title">— Threat Log —</div>
+    <div class="log-feed" id="logFeed">
+      <div class="log-empty" id="logEmpty">No threats logged yet... stay tuned.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const CONTESTANTS = [
+    { id: 'vicki',   name: 'Vicki',   count: 6 },
+    { id: 'charity', name: 'Charity', count: 0 },
+    { id: 'emma',    name: 'Emma',    count: 0 },
+    { id: 'jd',      name: 'JD',      count: 0 },
+    { id: 'landon',  name: 'Landon',  count: 0 },
+    { id: 'twin',    name: 'Twin',    count: 0 },
+    { id: 'anis',    name: 'Anis',    count: 0 },
+    { id: 'bashir',  name: 'Bashir',  count: 0 },
+    { id: 'bezo',    name: 'Bezo',    count: 0 },
+  ];
+
+  const THREAT_PHRASES = [
+    "threatened to dip 🚪",
+    "said they're OUT 😤",
+    "almost packed their bags 🧳",
+    "threatened to leave the tank 🐟",
+    "said \"I'm done\" 😠",
+    "ready to bounce 💨",
+    "threatened to walk 🚶",
+  ];
+
+  // State
+  let counts = {};
+  let log = [];
+
+  // Load from sessionStorage if available
+  try {
+    const saved = sessionStorage.getItem('fishtankCounts');
+    const savedLog = sessionStorage.getItem('fishtankLog');
+    if (saved) counts = JSON.parse(saved);
+    if (savedLog) log = JSON.parse(savedLog);
+  } catch(e) {}
+
+  // Init counts
+  CONTESTANTS.forEach(c => {
+    if (counts[c.id] === undefined) counts[c.id] = c.count;
+  });
+
+  function save() {
+    try {
+      sessionStorage.setItem('fishtankCounts', JSON.stringify(counts));
+      sessionStorage.setItem('fishtankLog', JSON.stringify(log));
+    } catch(e) {}
+  }
+
+  function getTotal() {
+    return Object.values(counts).reduce((a, b) => a + b, 0);
+  }
+
+  function updateTotal() {
+    document.getElementById('totalCount').textContent = getTotal();
+  }
+
+  function updateCard(id) {
+    const card = document.getElementById('card-' + id);
+    const display = document.getElementById('count-' + id);
+    const n = counts[id];
+    display.textContent = n;
+    if (n > 0) {
+      card.classList.add('has-threats');
+      const label = card.querySelector('.streak-label');
+      label.textContent = n === 1 ? '1 threat' : n + ' threats';
+    } else {
+      card.classList.remove('has-threats');
+      const label = card.querySelector('.streak-label');
+      label.textContent = 'no threats yet';
+    }
+  }
+
+  function addLogEntry(name, action) {
+    const now = new Date();
+    const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const phrase = action === 'add'
+      ? THREAT_PHRASES[Math.floor(Math.random() * THREAT_PHRASES.length)]
+      : 'threat removed (editing)';
+    log.unshift({ name, phrase, time });
+    if (log.length > 50) log.pop();
+    renderLog();
+    save();
+  }
+
+  function renderLog() {
+    const feed = document.getElementById('logFeed');
+    const empty = document.getElementById('logEmpty');
+    if (log.length === 0) {
+      if (empty) empty.style.display = '';
+      feed.innerHTML = '<div class="log-empty" id="logEmpty">No threats logged yet... stay tuned.</div>';
+      return;
+    }
+    feed.innerHTML = log.map(e => `
+      <div class="log-entry">
+        <span class="log-time">${e.time}</span>
+        <span class="log-name">${e.name}</span>
+        <span class="log-msg">${e.phrase}</span>
+      </div>
+    `).join('');
+  }
+
+  function increment(id, name) {
+    counts[id]++;
+    updateCard(id);
+    updateTotal();
+    addLogEntry(name, 'add');
+    save();
+    // Flash effect
+    const flash = document.getElementById('flash');
+    flash.classList.remove('active');
+    void flash.offsetWidth;
+    flash.classList.add('active');
+  }
+
+  function decrement(id, name) {
+    if (counts[id] <= 0) return;
+    counts[id]--;
+    updateCard(id);
+    updateTotal();
+    addLogEntry(name, 'remove');
+    save();
+  }
+
+  function buildGrid() {
+    const grid = document.getElementById('contestantGrid');
+    grid.innerHTML = CONTESTANTS.map(c => `
+      <div class="contestant-card ${counts[c.id] > 0 ? 'has-threats' : ''}" id="card-${c.id}">
+        <div class="contestant-left">
+          <div class="contestant-name">${c.name}</div>
+          <div class="streak-label">${counts[c.id] > 0 ? counts[c.id] + ' threat' + (counts[c.id] > 1 ? 's' : '') : 'no threats yet'}</div>
+        </div>
+        <div class="count-controls">
+          <button class="count-btn minus" onclick="decrement('${c.id}', '${c.name}')" title="Remove threat">−</button>
+          <div class="count-display" id="count-${c.id}">${counts[c.id]}</div>
+          <button class="count-btn plus" onclick="increment('${c.id}', '${c.name}')" title="Add threat">+</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Bubbles
+  function createBubbles() {
+    const container = document.getElementById('bubbles');
+    for (let i = 0; i < 18; i++) {
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      const size = Math.random() * 14 + 4;
+      b.style.cssText = `
+        width: ${size}px;
+        height: ${size}px;
+        left: ${Math.random() * 100}%;
+        animation-duration: ${Math.random() * 8 + 6}s;
+        animation-delay: ${Math.random() * 10}s;
+        opacity: ${Math.random() * 0.5 + 0.2};
+      `;
+      container.appendChild(b);
+    }
+  }
+
+  // Initialize
+  buildGrid();
+  updateTotal();
+  renderLog();
+  createBubbles();
+
+  // Pre-populate log with Vicki's 6 existing threats
+  if (log.length === 0) {
+    for (let i = 0; i < 6; i++) {
+      const phrase = THREAT_PHRASES[i % THREAT_PHRASES.length];
+      log.push({ name: 'Vicki', phrase, time: 'pre-show' });
+    }
+    renderLog();
+    save();
+  }
+</script>
+</body>
+</html>
